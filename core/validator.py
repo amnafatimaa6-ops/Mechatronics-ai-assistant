@@ -2,14 +2,17 @@ def validate(text, mode):
 
     base = 60
 
-    if "physics" in mode.lower():
-        base = 75
-    if "web" in mode.lower():
+    # boost confidence if web is involved
+    if "WEB" in mode:
         base = 85
+    elif "LOCAL" in mode:
+        base = 70
+    else:
+        base = 75
 
-    weak_words = ["maybe", "possibly", "depends"]
+    weak_signals = ["maybe", "possibly", "could be", "fallback"]
 
-    for w in weak_words:
+    for w in weak_signals:
         if w in text.lower():
             base -= 10
 
