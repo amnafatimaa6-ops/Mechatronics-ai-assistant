@@ -1,19 +1,19 @@
 def physics_fallback(query):
 
     return """
-🧠 ENGINEERING ANALYSIS (PHYSICS MODEL)
+ENGINEERING ANALYSIS (PHYSICS MODEL)
 
-Motor heating occurs due to energy losses in electrical and mechanical domains.
+Motor heating occurs due to energy losses:
 
-PRIMARY CAUSES:
-• I²R losses in windings (current squared heating effect)
-• Mechanical friction in bearings
-• Magnetic losses (eddy currents & hysteresis)
-• Insufficient thermal dissipation
+CAUSES:
+- I²R losses in windings
+- Mechanical friction
+- Magnetic losses
+- Poor cooling
 
-ENGINEERING FIX:
-• Reduce load torque
-• Verify rated current limits
-• Improve cooling/airflow
-• Inspect mechanical wear
+FIX:
+- Reduce load
+- Improve ventilation
+- Check bearings
+- Verify voltage/current ratings
 """
