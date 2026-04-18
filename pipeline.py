@@ -8,31 +8,74 @@ from core.validator import validate
 from diagnostics.fallback_physics import physics_fallback
 
 
+# =========================
+# 🧠 INTELLIGENCE ENGINE
+# =========================
+
+def detect_intent(query):
+    q = query.lower()
+
+    if any(x in q for x in ["what is", "define", "explain", "describe"]):
+        return "PROFESSOR"
+
+    if any(x in q for x in ["why", "error", "fault", "not working", "heating", "failure"]):
+        return "TECHNICIAN"
+
+    if any(x in q for x in ["research", "compare", "analyze", "deep"]):
+        return "RESEARCH"
+
+    return "PROFESSOR"
+
+
 def run_diagnostics(query):
 
-    # 1. Normalize query (makes search smarter)
     query = normalize_query(query)
+    intent = detect_intent(query)
 
-    # 2. WEB LAYER (internet retrieval)
+    # =========================
+    # 📘 PROFESSOR MODE
+    # =========================
+    if intent == "PROFESSOR":
+
+        prompt = f"""
+You are a world-class Mechatronics professor.
+
+Explain clearly and deeply.
+
+Question:
+{query}
+
+Format:
+Definition:
+Core Principles:
+Components:
+Applications:
+Real-world Example:
+"""
+
+        response = ask_llm(prompt)
+        return validate(response, "📘 PROFESSOR MODE")
+
+
+    # =========================
+    # ⚙️ TECHNICIAN MODE
+    # =========================
+
     web_results = search_web(query)
 
     web_context = []
     for r in web_results:
         text = extract_text(r["url"])
-        if text and len(text) > 100:
+        if text and len(text) > 120:
             web_context.append(text)
 
-    # 3. LOCAL KNOWLEDGE BASE
     local_context = get_local_context(query)
-
-    # 4. PHYSICS FALLBACK (always available)
     physics_context = physics_fallback(query)
 
-    # 5. CONTEXT FUSION (DECISION BRAIN)
-
-    if web_context and len(web_context) >= 2:
+    # SMART FUSION ENGINE
+    if len(web_context) >= 2:
         combined_context = "\n".join(rank_context(web_context[:3]))
-        mode = "🌐 WEB + ENGINEERING DATA"
+        mode = "🌐 WEB + TECHNICAL DATA"
 
     elif local_context:
         combined_context = local_context
@@ -42,36 +85,28 @@ def run_diagnostics(query):
         combined_context = physics_context
         mode = "⚙️ PHYSICS FALLBACK ENGINE"
 
-    # 6. ENGINEERING AI PROMPT
+
     prompt = f"""
-You are a senior Mechatronics engineer.
+You are a senior Mechatronics diagnostics engineer.
 
-RULES:
-- Use ONLY the provided context
-- Be precise and technical
-- Explain using physics/electrical principles
-- Do NOT guess outside context
+Be precise and technical.
 
-CONTEXT:
+Context:
 {combined_context}
 
-PROBLEM:
+Problem:
 {query}
 
-FORMAT:
+Format:
 Diagnosis:
 Root Cause:
 Engineering Explanation:
 Fix:
 """
 
-    # 7. AI RESPONSE (SAFE + FREE MODEL WRAPPED IN llm_engine.py)
     try:
         response = ask_llm(prompt)
-    except Exception:
+    except:
         response = physics_context
 
-    # 8. VALIDATION + CONFIDENCE SCORING
-    result = validate(response, mode)
-
-    return result
+    return validate(response, mode)
