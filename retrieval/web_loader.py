@@ -6,12 +6,10 @@ def extract_text(url):
         r = requests.get(url, timeout=5)
         soup = BeautifulSoup(r.text, "html.parser")
 
-        for tag in soup(["script", "style", "nav"]):
-            tag.decompose()
+        for t in soup(["script", "style"]):
+            t.decompose()
 
-        text = " ".join(p.get_text() for p in soup.find_all("p"))
-
-        return text[:2500]
+        return " ".join(p.get_text() for p in soup.find_all("p"))[:2000]
 
     except:
         return ""
