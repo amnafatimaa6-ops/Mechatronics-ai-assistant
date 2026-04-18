@@ -6,11 +6,11 @@ def validate_response(text):
 
     confidence = 100
 
-    for phrase in weak_phrases:
-        if phrase in text.lower():
+    for w in weak_phrases:
+        if w in text.lower():
             confidence -= 10
 
-    confidence = max(confidence, 20)
+    confidence = max(confidence, 40)
 
     return {
         "response": text,
