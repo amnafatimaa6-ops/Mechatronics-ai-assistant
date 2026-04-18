@@ -1,18 +1,20 @@
-def validate_response(text):
-    weak_phrases = [
-        "maybe", "possibly", "could be",
-        "it depends", "not sure"
-    ]
+def validate(text, mode):
 
-    confidence = 100
+    base = 60
 
-    for w in weak_phrases:
+    if "physics" in mode.lower():
+        base = 75
+    if "web" in mode.lower():
+        base = 85
+
+    weak_words = ["maybe", "possibly", "depends"]
+
+    for w in weak_words:
         if w in text.lower():
-            confidence -= 10
-
-    confidence = max(confidence, 40)
+            base -= 10
 
     return {
-        "response": text,
-        "confidence": confidence
+        "report": text,
+        "confidence": max(base, 40),
+        "mode": mode
     }
