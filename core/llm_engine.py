@@ -4,6 +4,12 @@ API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-base"
 
 
 def ask_llm(prompt):
+    """
+    Bulletproof LLM wrapper:
+    - Uses free HuggingFace inference
+    - Handles API failures safely
+    - Never crashes pipeline
+    """
 
     try:
         response = requests.post(
@@ -14,15 +20,18 @@ def ask_llm(prompt):
 
         data = response.json()
 
-        # VALID RESPONSE
-        if isinstance(data, list) and "generated_text" in data[0]:
-            return data[0]["generated_text"]
+        # ✅ Case 1: Normal successful response
+        if isinstance(data, list) and len(data) > 0:
+            if "generated_text" in data[0]:
+                return data[0]["generated_text"]
 
-        # MODEL LOADING CASE (IMPORTANT FIX)
+        # ❌ Case 2: Model loading / API error
         if isinstance(data, dict) and "error" in data:
             return None
 
+        # ❌ Case 3: Unexpected format
         return None
 
-    except:
+    except Exception:
+        # ❌ Network failure fallback
         return None
