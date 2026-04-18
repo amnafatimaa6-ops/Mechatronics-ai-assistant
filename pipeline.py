@@ -4,61 +4,67 @@ from retrieval.web_loader import extract_text
 from retrieval.local_kb import get_local_context
 from retrieval.ranker import rank_context
 from core.llm_engine import ask_llm
-from core.validator import validate
 from diagnostics.fallback_physics import physics_fallback
 
 
 # =========================
-# 🧠 INTELLIGENCE ENGINE
+# 🧠 INTENT ENGINE
 # =========================
-
 def detect_intent(query):
     q = query.lower()
 
     if any(x in q for x in ["what is", "define", "explain", "describe"]):
         return "PROFESSOR"
 
-    if any(x in q for x in ["why", "error", "fault", "not working", "heating", "failure"]):
+    if any(x in q for x in ["why", "fault", "error", "heating", "not working"]):
         return "TECHNICIAN"
-
-    if any(x in q for x in ["research", "compare", "analyze", "deep"]):
-        return "RESEARCH"
 
     return "PROFESSOR"
 
 
+# =========================
+# ⚙️ MAIN PIPELINE
+# =========================
 def run_diagnostics(query):
 
     query = normalize_query(query)
     intent = detect_intent(query)
 
+    sources = []
+    context = ""
+    mode = ""
+
     # =========================
-    # 📘 PROFESSOR MODE
+    # 📘 KNOWLEDGE MODE
     # =========================
     if intent == "PROFESSOR":
 
         prompt = f"""
-You are a world-class Mechatronics professor.
+You are a Mechatronics professor.
 
-Explain clearly and deeply.
+Explain clearly and structured.
 
-Question:
+Topic:
 {query}
 
 Format:
 Definition:
-Core Principles:
+Core Concepts:
 Components:
 Applications:
-Real-world Example:
 """
 
-        response = ask_llm(prompt)
-        return validate(response, "📘 PROFESSOR MODE")
+        answer = ask_llm(prompt)
 
+        return {
+            "mode": "📘 PROFESSOR MODE",
+            "answer": answer,
+            "confidence": 90,
+            "sources": ["llm"]
+        }
 
     # =========================
-    # ⚙️ TECHNICIAN MODE
+    # ⚙️ DIAGNOSTIC MODE
     # =========================
 
     web_results = search_web(query)
@@ -72,27 +78,34 @@ Real-world Example:
     local_context = get_local_context(query)
     physics_context = physics_fallback(query)
 
-    # SMART FUSION ENGINE
+    # =========================
+    # 🧠 CONTEXT DECISION ENGINE
+    # =========================
     if len(web_context) >= 2:
-        combined_context = "\n".join(rank_context(web_context[:3]))
-        mode = "🌐 WEB + TECHNICAL DATA"
+        context = "\n".join(rank_context(web_context[:3]))
+        mode = "🌐 WEB MODE"
+        sources.append("web")
 
     elif local_context:
-        combined_context = local_context
-        mode = "📚 LOCAL ENGINEERING KB"
+        context = local_context
+        mode = "📚 LOCAL MODE"
+        sources.append("local")
 
     else:
-        combined_context = physics_context
-        mode = "⚙️ PHYSICS FALLBACK ENGINE"
+        context = physics_context
+        mode = "⚙️ FALLBACK MODE"
+        sources.append("physics")
 
-
+    # =========================
+    # 🤖 LLM EXECUTION
+    # =========================
     prompt = f"""
-You are a senior Mechatronics diagnostics engineer.
+You are a senior Mechatronics engineer.
 
-Be precise and technical.
+Be precise.
 
 Context:
-{combined_context}
+{context}
 
 Problem:
 {query}
@@ -100,13 +113,21 @@ Problem:
 Format:
 Diagnosis:
 Root Cause:
-Engineering Explanation:
 Fix:
 """
 
     try:
-        response = ask_llm(prompt)
+        answer = ask_llm(prompt)
+        sources.append("llm")
     except:
-        response = physics_context
+        answer = physics_context
 
-    return validate(response, mode)
+    # =========================
+    # 📦 STRICT OUTPUT CONTRACT
+    # =========================
+    return {
+        "mode": f"⚙️ {mode}",
+        "answer": answer,
+        "confidence": 85 if "web" in sources else 70,
+        "sources": sources
+    }
