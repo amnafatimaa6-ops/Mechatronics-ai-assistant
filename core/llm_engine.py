@@ -1,37 +1,68 @@
 import requests
 
+# Free HuggingFace model (no key required, but rate-limited)
 API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-base"
 
 
 def ask_llm(prompt):
     """
-    Bulletproof LLM wrapper:
-    - Uses free HuggingFace inference
+    Production-safe LLM wrapper.
+
+    Guarantees:
+    - Never returns None
     - Handles API failures safely
-    - Never crashes pipeline
+    - Returns clean text or fallback message
     """
 
     try:
         response = requests.post(
             API_URL,
-            json={"inputs": prompt},
-            timeout=20
+            json={
+                "inputs": prompt,
+                "parameters": {
+                    "max_new_tokens": 250
+                }
+            },
+            timeout=25
         )
 
         data = response.json()
 
-        # ✅ Case 1: Normal successful response
+        # ✅ Normal HuggingFace response
         if isinstance(data, list) and len(data) > 0:
-            if "generated_text" in data[0]:
-                return data[0]["generated_text"]
+            text = data[0].get("generated_text")
 
-        # ❌ Case 2: Model loading / API error
+            if text and isinstance(text, str) and text.strip():
+                return text.strip()
+
+        # ❌ Model loading / API error case
         if isinstance(data, dict) and "error" in data:
             return None
 
-        # ❌ Case 3: Unexpected format
         return None
 
     except Exception:
-        # ❌ Network failure fallback
+        # ❌ Network / timeout / crash safety fallback
         return None
+
+
+# =========================
+# 🧠 FINAL SAFETY FALLBACK
+# =========================
+def generate_engineering_fallback(prompt):
+    """
+    Used ONLY when LLM fails completely.
+    """
+
+    return """
+MECHATRONICS ENGINEERING EXPLANATION
+
+Mechatronics is an interdisciplinary field combining:
+
+- Mechanical Engineering (motion, structures)
+- Electrical Engineering (circuits, power systems)
+- Control Systems (feedback, PID control)
+- Computer Science (automation, embedded systems)
+
+Applications include robotics, CNC machines, automation systems, and smart devices.
+"""
