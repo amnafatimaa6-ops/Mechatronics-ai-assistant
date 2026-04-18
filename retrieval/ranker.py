@@ -1,17 +1,15 @@
 def rank_context(blocks):
     scored = []
 
+    keywords = ["motor", "heat", "torque", "current", "sensor", "friction"]
+
     for b in blocks:
         score = 0
+        text = b.lower()
 
-        if "motor" in b.lower():
-            score += 3
-        if "torque" in b.lower():
-            score += 3
-        if "heat" in b.lower():
-            score += 2
-        if "sensor" in b.lower():
-            score += 2
+        for k in keywords:
+            if k in text:
+                score += 2
 
         scored.append((score, b))
 
