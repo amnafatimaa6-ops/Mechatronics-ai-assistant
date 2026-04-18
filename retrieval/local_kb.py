@@ -1,19 +1,15 @@
 def get_local_context(query):
-    return """
-DC motor overheating:
-- caused by high current draw
+    kb = """
+DC motor overheating causes:
+- high current draw
 - mechanical overload
-- poor cooling system
-- worn bearings increase friction
+- poor ventilation
+- bearing friction
 
 Torque issues:
-- low voltage supply
+- voltage drop
 - gear mismatch
 - excessive load
-- controller tuning issues
-
-Sensor errors:
-- noise interference
-- poor calibration
-- wiring issues
 """
+
+    return kb
