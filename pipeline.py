@@ -8,7 +8,7 @@ from diagnostics.fallback_physics import physics_fallback
 
 
 # =========================
-# 🧠 INTENT ENGINE
+# 🧠 INTENT DETECTION
 # =========================
 def detect_intent(query):
     q = query.lower()
@@ -20,6 +20,28 @@ def detect_intent(query):
         return "TECHNICIAN"
 
     return "PROFESSOR"
+
+
+# =========================
+# 🛡 SAFE WEB PIPELINE
+# =========================
+def safe_web_context(query):
+    try:
+        results = search_web(query)
+
+        texts = []
+        for r in results[:3]:
+            try:
+                text = extract_text(r["url"])
+                if text:
+                    texts.append(text[:1200])
+            except:
+                continue
+
+        return texts
+
+    except:
+        return []
 
 
 # =========================
@@ -35,74 +57,66 @@ def run_diagnostics(query):
     mode = ""
 
     # =========================
-    # 📘 KNOWLEDGE MODE
+    # 📘 PROFESSOR MODE
     # =========================
     if intent == "PROFESSOR":
 
         prompt = f"""
 You are a Mechatronics professor.
 
-Explain clearly and structured.
+Explain clearly:
 
-Topic:
 {query}
 
 Format:
 Definition:
 Core Concepts:
-Components:
 Applications:
 """
 
-        answer = ask_llm(prompt)
+        try:
+            answer = ask_llm(prompt)
+        except:
+            answer = "Mechatronics combines mechanical, electrical, and control systems."
 
         return {
-            "mode": "📘 PROFESSOR MODE",
             "answer": answer,
+            "mode": "📘 PROFESSOR MODE",
             "confidence": 90,
             "sources": ["llm"]
         }
 
     # =========================
-    # ⚙️ DIAGNOSTIC MODE
+    # ⚙️ TECHNICIAN MODE
     # =========================
 
-    web_results = search_web(query)
-
-    web_context = []
-    for r in web_results:
-        text = extract_text(r["url"])
-        if text and len(text) > 120:
-            web_context.append(text)
-
+    web_context = safe_web_context(query)
     local_context = get_local_context(query)
     physics_context = physics_fallback(query)
 
-    # =========================
-    # 🧠 CONTEXT DECISION ENGINE
-    # =========================
+    # -------------------------
+    # CONTEXT DECISION ENGINE
+    # -------------------------
     if len(web_context) >= 2:
         context = "\n".join(rank_context(web_context[:3]))
-        mode = "🌐 WEB MODE"
+        mode = "🌐 WEB ENGINE"
         sources.append("web")
 
     elif local_context:
         context = local_context
-        mode = "📚 LOCAL MODE"
+        mode = "📚 LOCAL ENGINE"
         sources.append("local")
 
     else:
         context = physics_context
-        mode = "⚙️ FALLBACK MODE"
+        mode = "⚙️ FALLBACK ENGINE"
         sources.append("physics")
 
-    # =========================
-    # 🤖 LLM EXECUTION
-    # =========================
+    # -------------------------
+    # LLM EXECUTION (SAFE)
+    # -------------------------
     prompt = f"""
 You are a senior Mechatronics engineer.
-
-Be precise.
 
 Context:
 {context}
@@ -123,11 +137,11 @@ Fix:
         answer = physics_context
 
     # =========================
-    # 📦 STRICT OUTPUT CONTRACT
+    # FINAL OUTPUT CONTRACT
     # =========================
     return {
-        "mode": f"⚙️ {mode}",
         "answer": answer,
+        "mode": mode,
         "confidence": 85 if "web" in sources else 70,
         "sources": sources
     }
