@@ -1,15 +1,19 @@
 def physics_fallback(query):
+
     return """
-DC motor heating is governed by:
+🧠 ENGINEERING ANALYSIS (PHYSICS MODEL)
 
-1. Electrical losses (I²R heating)
-2. Mechanical friction losses
-3. Magnetic losses (eddy currents)
-4. Thermal dissipation limits
+Motor heating occurs due to energy losses in electrical and mechanical domains.
 
-Engineering Fix:
-- reduce load torque
-- improve heat dissipation
-- ensure correct voltage/current rating
-- inspect bearings
+PRIMARY CAUSES:
+• I²R losses in windings (current squared heating effect)
+• Mechanical friction in bearings
+• Magnetic losses (eddy currents & hysteresis)
+• Insufficient thermal dissipation
+
+ENGINEERING FIX:
+• Reduce load torque
+• Verify rated current limits
+• Improve cooling/airflow
+• Inspect mechanical wear
 """
