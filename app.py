@@ -1,21 +1,21 @@
 import streamlit as st
 from pipeline import run_diagnostics
 
-st.set_page_config(page_title="Industrial Mechatronics AI", layout="wide")
-
-st.title("⚙️ Mechatronics Diagnostic System v4 (Industrial Grade)")
-st.write("Hybrid AI system for engineering fault analysis")
+st.title("⚙️ Mechatronics AI System (Production)")
 
 query = st.text_input("Enter system issue")
 
 if query:
     result = run_diagnostics(query)
 
-    st.markdown("## 🧠 Engineering Diagnosis")
-    st.write(result["report"])
+    st.markdown("## 🧠 Answer")
+    st.write(result["answer"])
 
-    st.markdown("## 📊 Confidence Score")
-    st.progress(int(result["confidence"]))
+    st.markdown("## 📊 Confidence")
+    st.progress(result["confidence"])
 
-    st.markdown("## 📄 System Mode")
+    st.markdown("## 📄 Mode")
     st.write(result["mode"])
+
+    st.markdown("## 🔎 Sources")
+    st.write(", ".join(result["sources"]))
