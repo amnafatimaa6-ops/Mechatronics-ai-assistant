@@ -13,7 +13,7 @@ def run_diagnostics(query):
     # 1. Normalize query (makes search smarter)
     query = normalize_query(query)
 
-    # 2. WEB LAYER (FREE INTERNET DATA)
+    # 2. WEB LAYER (internet retrieval)
     web_results = search_web(query)
 
     web_context = []
@@ -22,39 +22,35 @@ def run_diagnostics(query):
         if text and len(text) > 100:
             web_context.append(text)
 
-    # 3. LOCAL KNOWLEDGE BASE (FAST + RELIABLE)
+    # 3. LOCAL KNOWLEDGE BASE
     local_context = get_local_context(query)
 
-    # 4. PHYSICS FALLBACK (ALWAYS AVAILABLE)
+    # 4. PHYSICS FALLBACK (always available)
     physics_context = physics_fallback(query)
 
-    # 5. CONTEXT FUSION (DECIDES WHAT TO USE)
-    combined_context = ""
+    # 5. CONTEXT FUSION (DECISION BRAIN)
 
-    if len(web_context) > 0:
-        combined_context += "\n".join(rank_context(web_context[:3]))
-        mode = "WEB + ENGINEERING DATA"
+    if web_context and len(web_context) >= 2:
+        combined_context = "\n".join(rank_context(web_context[:3]))
+        mode = "🌐 WEB + ENGINEERING DATA"
 
-    elif len(local_context) > 0:
-        combined_context += local_context
-        mode = "LOCAL ENGINEERING KB"
+    elif local_context:
+        combined_context = local_context
+        mode = "📚 LOCAL ENGINEERING KB"
 
     else:
-        combined_context += physics_context
-        mode = "PHYSICS FALLBACK ENGINE"
+        combined_context = physics_context
+        mode = "⚙️ PHYSICS FALLBACK ENGINE"
 
-    # 6. ENGINEERING PROMPT (IMPORTANT FOR QUALITY)
-
+    # 6. ENGINEERING AI PROMPT
     prompt = f"""
 You are a senior Mechatronics engineer.
 
-Provide structured technical diagnosis.
-
 RULES:
-- Use ONLY provided context
-- Be precise and logical
-- Use physics/electrical reasoning
-- No vague answers
+- Use ONLY the provided context
+- Be precise and technical
+- Explain using physics/electrical principles
+- Do NOT guess outside context
 
 CONTEXT:
 {combined_context}
@@ -69,13 +65,13 @@ Engineering Explanation:
 Fix:
 """
 
-    # 7. AI ENGINE (FREE HF MODEL VIA llm_engine.py)
+    # 7. AI RESPONSE (SAFE + FREE MODEL WRAPPED IN llm_engine.py)
     try:
-        raw = ask_llm(prompt)
+        response = ask_llm(prompt)
     except Exception:
-        raw = physics_context
+        response = physics_context
 
     # 8. VALIDATION + CONFIDENCE SCORING
-    result = validate(raw, mode)
+    result = validate(response, mode)
 
     return result
